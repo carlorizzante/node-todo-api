@@ -11,17 +11,20 @@ const PORT = process.env.port || 3000;
 app.use(bodyParser.json());
 
 app.post("/todos", (req, res) => {
-  console.log(req.body);
+
+  // console.log(req.body);
+
   const todo = new Todo({
     text: req.body.text
   });
+
   todo.save()
     .then( doc => {
-      console.log("Document saved");
-      console.log(JSON.stringify(doc, null, 2));
+      // console.log("Document saved");
+      // console.log(JSON.stringify(doc, null, 2));
       res.send(doc);
     }, err => {
-      console.log("Unable to save document:", err);
+      // console.log("Unable to save document:");
       res.status(400).send(err);
     });
 });
@@ -29,6 +32,8 @@ app.post("/todos", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server listenig on port ${PORT}...`);
 });
+
+module.exports = { app };
 
 
 // const newTodo = new Todo({
