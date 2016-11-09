@@ -11,9 +11,7 @@ const PORT = process.env.port || 3000;
 app.use(bodyParser.json());
 
 app.post("/todos", (req, res) => {
-
   // console.log(req.body);
-
   const todo = new Todo({
     text: req.body.text
   });
@@ -25,6 +23,17 @@ app.post("/todos", (req, res) => {
       res.send(doc);
     }, err => {
       // console.log("Unable to save document:");
+      res.status(400).send(err);
+    });
+});
+
+app.get("/todos", (req, res) => {
+  const todos = Todo.find()
+    .then( docs => {
+      // console.log(counter++);
+      console.log(JSON.stringify(docs, null, 2));
+      res.send({docs});
+    }, err => {
       res.status(400).send(err);
     });
 });

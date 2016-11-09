@@ -17,10 +17,10 @@ describe("POST /todos", () => {
   });
 
   // Clean up the entire database and add a single todo
-  afterEach(done => {
-    Todo.remove({}).then(() => done());
-    done();
-  });
+  // afterEach(done => {
+  //   Todo.remove({}).then(() => done());
+  //   done();
+  // });
 
   it("should create a new todo", done => {
     const text = "Server.test.js";
