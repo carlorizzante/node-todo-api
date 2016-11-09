@@ -20,7 +20,7 @@ app.post("/todos", (req, res) => {
     .then( doc => {
       // console.log("Document saved");
       // console.log(JSON.stringify(doc, null, 2));
-      res.send(doc);
+      res.status(201).send(doc);
     }, err => {
       // console.log("Unable to save document:");
       res.status(400).send(err);
@@ -29,10 +29,10 @@ app.post("/todos", (req, res) => {
 
 app.get("/todos", (req, res) => {
   const todos = Todo.find()
-    .then( docs => {
+    .then( todos => {
       // console.log(counter++);
-      console.log(JSON.stringify(docs, null, 2));
-      res.send({docs});
+      // console.log(JSON.stringify(todos, null, 2));
+      res.send({todos});
     }, err => {
       res.status(400).send(err);
     });
