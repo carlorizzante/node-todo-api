@@ -6,8 +6,10 @@ const { app } = require("../server");
 const { Todo } = require("../models/todo");
 
 const test_todos = [{
+  _id: new ObjectID(),
   text: "Hello from server.test.js"
 }, {
+  _id: new ObjectID(),
   text: "Hello again from server.test.js"
 }];
 
@@ -25,7 +27,7 @@ describe("POST /todos", () => {
     request(app)
       .post("/todos")
       .send({text})
-      .expect(201)
+      .expect(200)
       .expect(res => {
         expect(res.body.text).toBe(text);
       })
@@ -64,6 +66,39 @@ describe("GET /todos", () => {
       .expect(200)
       .expect(res => {
         expect(res.body.todos.length).toBe(2);
+      })
+      .end(done);
+  });
+});
+
+describe("GET /todo/:_id", () => {
+  it("should find and return a todo by id", done => {
+    const _id = test_todos[0]._id.toHexString();
+    // const _id = new ObjectID("58230ce05e4dd626c014b9c9"); // random valid _id
+    request(app)
+      .get(`/todo/${_id}`)
+      .expect(200)
+      .expect(res => {
+        expect(res.body._id).toBe(_id);
+        expect(res.body.text).toBe(test_todos[0].text);
+      })
+      .end(done);
+  });
+
+  it("should return a 404 if todo not found", done => {
+    const _id = new ObjectID().toHexString();
+    request(app)
+      .get(`/todo/${_id}`)
+      .expect(404)
+      .end(done);
+  });
+
+  it("should return a 400 if invalid id", done => {
+    request(app)
+      .get("/todo/INVALID_ID")
+      .expect(400)
+      .expect(res => {
+        expect(res.body).toEqual({});
       })
       .end(done);
   });

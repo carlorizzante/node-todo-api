@@ -21,7 +21,7 @@ app.post("/todos", (req, res) => {
     .then( doc => {
       // console.log("Document saved");
       // console.log(JSON.stringify(doc, null, 2));
-      res.status(201).send(doc);
+      res.status(200).send(doc);
     }, err => {
       // console.log("Unable to save document:");
       res.status(400).send(err);
@@ -44,10 +44,12 @@ app.get("/todo/:_id", (req, res) => {
   if (!ObjectID.isValid(_id)) res.status(400).send("Bad request > Invalid ID");
 
   Todo.findById(_id).then(todo => {
-    if (!todo) res.status(404).send("Not found.");
+    if (!todo) return res.status(404).end("Not found.");
     res.status(200).send(todo);
+  }, err => {
+    // Empty error handler, see catch below
   }).catch(e => {
-    console.log(e);
+    // console.log(e);
     res.status(400).send("Some error occurred.");
   });
 });
