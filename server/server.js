@@ -7,7 +7,7 @@ const { User } = require("./models/user");
 const { Todo } = require("./models/todo");
 
 const app = express();
-const port = process.env.port || 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
@@ -54,8 +54,8 @@ app.get("/todo/:_id", (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Server listenig on port ${port}...`);
+app.listen(PORT, () => {
+  console.log(`Server listenig on port ${PORT}...`);
 });
 
 module.exports = { app };
