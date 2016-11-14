@@ -41,7 +41,7 @@ app.get("/todos", (req, res) => {
 
 app.get("/todo/:_id", (req, res) => {
   const _id = req.params._id;
-  if (!ObjectID.isValid(_id)) res.status(400).send("Bad request > Invalid ID");
+  if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
 
   Todo.findById(_id).then(todo => {
     if (!todo) return res.status(404).end("Not found.");
@@ -50,6 +50,20 @@ app.get("/todo/:_id", (req, res) => {
     // Empty error handler, see catch below
   }).catch(e => {
     // console.log(e);
+    res.status(400).send("Some error occurred.");
+  });
+});
+
+app.delete("/todo/:_id", (req, res) => {
+  const _id = req.params._id;
+  if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
+
+  Todo.findByIdAndRemove(_id).then(todo => {
+    if (!todo) return res.status(404).end("Not found");
+    res.status(200).send(todo);
+  }, err => {
+    // Empty error handler, see catch below
+  }).catch(e => {
     res.status(400).send("Some error occurred.");
   });
 });
