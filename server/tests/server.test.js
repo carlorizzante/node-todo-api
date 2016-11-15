@@ -10,7 +10,9 @@ const test_todos = [{
   text: "Hello from server.test.js"
 }, {
   _id: new ObjectID(),
-  text: "Hello again from server.test.js"
+  text: "Hello again from server.test.js",
+  completed: true,
+  completedAt: 333
 }];
 
 beforeEach(done => {
@@ -138,3 +140,48 @@ describe("DELETE /todo/:_id", () => {
       .end(done);
   });
 });
+
+describe("PATCH /todo/:_id", () => {
+  it("should update the todo if completed", done => {
+    const hexId = test_todos[0]._id.toHexString();
+    const text = "Testing PATCH /todo/:_id";
+    request(app)
+      .patch(`/todo/${hexId}`)
+      .send({"completed": true, text})
+      .expect(200)
+      .expect(res => {
+        expect(res.body.completed).toBe(true);
+        expect(res.body.text).toBe(text);
+        expect(res.body.completedAt).toBeA("number");
+      })
+      .end(done);
+  });
+
+  it("shouod clear completedAt when todo not completed", done => {
+    const hexId = test_todos[1]._id.toHexString();
+    request(app)
+      .patch(`/todo/${hexId}`)
+      .send({"completed": false})
+      .expect(200)
+      .expect(res => {
+        expect(res.body.completed).toBe(false);
+        expect(res.body.completedAt).toNotExist();
+      })
+      .end(done);
+  });
+
+  it("should return 404 if todo no found", done => {
+    const hexId = new ObjectID().toHexString();
+    request(app)
+      .patch(`/todo/${hexId}`)
+      .expect(404)
+      .end(done);
+  });
+
+  it("should return 400 if invalid id", done => {
+    request(app)
+      .patch("/todo/INVALID_ID")
+      .expect(400)
+      .end(done);
+  });
+})
