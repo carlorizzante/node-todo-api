@@ -69,7 +69,7 @@ app.delete("/todo/:_id", (req, res) => {
   });
 });
 
-app.patch("todo/:_id", (req, res) => {
+app.patch("/todo/:_id", (req, res) => {
   const _id = req.params._id;
   const body = _.pick(req.body, ["text", "completed"]);
 
