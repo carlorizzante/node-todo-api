@@ -18,10 +18,10 @@ app.post("/todos", (req, res) => {
   });
 
   todo.save()
-    .then( doc => {
+    .then( todo => {
       // console.log("Document saved");
-      // console.log(JSON.stringify(doc, null, 2));
-      res.status(200).send(doc);
+      // console.log(JSON.stringify(todo, null, 2));
+      res.status(200).send(todo);
     }, err => {
       // console.log("Unable to save document:");
       res.status(400).send(err);
