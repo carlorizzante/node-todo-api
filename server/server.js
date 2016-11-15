@@ -3,12 +3,13 @@ const bodyParser = require("body-parser");
 const {ObjectID} = require("mongodb");
 const _ = require("lodash");
 
+require("./server.config");
 const { mongoose } = require("./db/mongoose");
 const { User } = require("./models/user");
 const { Todo } = require("./models/todo");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
@@ -90,8 +91,8 @@ app.patch("/todo/:_id", (req, res) => {
   })
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listenig on port ${PORT}...`);
+app.listen(port, () => {
+  console.log(`Server listenig on port ${port}...`);
 });
 
 module.exports = { app };
