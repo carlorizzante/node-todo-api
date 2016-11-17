@@ -338,3 +338,9 @@ describe("Get /user/:_id", () => {
       .end(done);
   });
 });
+
+describe("Get /profile", () => {
+  it("should return the current user by token", done => {
+
+  });
+});

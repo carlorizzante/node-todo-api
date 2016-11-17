@@ -7,6 +7,7 @@ require("./server.config");
 const { mongoose } = require("./db/mongoose");
 const { User } = require("./models/user");
 const { Todo } = require("./models/todo");
+const { authenticate } = require("./middleware/authenticate");
 
 const app = express();
 const port = process.env.PORT;
@@ -126,14 +127,20 @@ app.get("/user/:_id", (req, res) => {
   if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
 
   User.findById(_id).then(user => {
-    if (!user) return res.status(404).end("No user found");
+    if (!user) return res.status(404).end("User not found");
     res.status(200).send(user);
   }, err => {
     res.status(400).send(err);
   });
 });
 
+app.get("/profile", authenticate, (req, res) => {
+  res.status(200).send(req.user);
+});
 
+// ----------------------------
+// Start the server
+// ----------------------------
 
 app.listen(port, () => {
   console.log(`Server listenig on port ${port}...`);
