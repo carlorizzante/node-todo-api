@@ -13,21 +13,24 @@ const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
-app.post("/todos", (req, res) => {
+// ----------------------------
+// Todos
+// ----------------------------
+
+app.post("/todo", (req, res) => {
   // console.log(req.body);
   const todo = new Todo({
     text: req.body.text
   });
 
-  todo.save()
-    .then( todo => {
-      // console.log("Document saved");
-      // console.log(JSON.stringify(todo, null, 2));
-      res.status(200).send(todo);
-    }, err => {
-      // console.log("Unable to save document:");
-      res.status(400).send(err);
-    });
+  todo.save().then( todo => {
+    // console.log("Document saved");
+    // console.log(JSON.stringify(todo, null, 2));
+    res.status(200).send(todo);
+  }, err => {
+    // console.log("Unable to save document:");
+    res.status(400).send(err);
+  });
 });
 
 app.get("/todos", (req, res) => {
@@ -35,7 +38,7 @@ app.get("/todos", (req, res) => {
     .then( todos => {
       // console.log(counter++);
       // console.log(JSON.stringify(todos, null, 2));
-      res.send({todos});
+      res.status(200).send({todos});
     }, err => {
       res.status(400).send(err);
     });
@@ -91,46 +94,49 @@ app.patch("/todo/:_id", (req, res) => {
   })
 });
 
+// ----------------------------
+// Users
+// ----------------------------
+
+app.post("/user", (req, res) => {
+  const body = _.pick(req.body, ["username", "email", "password"]);
+  const user = new User(body);
+
+  user.save().then(() => {
+    // console.log("Document saved");
+    // console.log(JSON.stringify(user, null, 2));
+    return user.generateAuthToken();
+  }).then(token => {
+    res.header("x-auth", token).status(200).send(user);
+  }).catch(err => res.status(400).send(err));
+});
+
+app.get("/users", (req, res) => {
+  const users = User.find()
+    .then( users => {
+      // console.log(JSON.stringify(users, null, 2));
+      res.status(200).send({users});
+    }, err => {
+      res.status(400).send(err);
+    });
+});
+
+app.get("/user/:_id", (req, res) => {
+  const _id = req.params._id;
+  if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
+
+  User.findById(_id).then(user => {
+    if (!user) return res.status(404).end("No user found");
+    res.status(200).send(user);
+  }, err => {
+    res.status(400).send(err);
+  });
+});
+
+
+
 app.listen(port, () => {
   console.log(`Server listenig on port ${port}...`);
 });
 
-module.exports = { app };
-
-
-// const newTodo = new Todo({
-//   text: "sdknfksd"
-// });
-//
-// newTodo.save()
-//   .then( doc => {
-//     console.log(JSON.stringify(doc, null, 2));
-//   }, err => {
-//     console.log("Unable to save document:", err);
-//   });
-//
-// const otherTodo = new Todo({
-//   text: "nsdfksdfsld",
-//   completed: true
-// });
-//
-// otherTodo.save()
-//   .then( doc => {
-//     console.log(JSON.stringify(doc, null, 2));
-//   }, err => {
-//     console.log("Unable to save document:", err);
-//   });
-
-
-
-// const newUser = new User({
-//   username: "janedove",
-//   email: "jane@dove.com"
-// });
-//
-// newUser.save()
-//   .then( doc => {
-//     console.log(JSON.stringify(doc, null, 2));
-//   }, err => {
-//     console.log("Unable to save document:", err);
-//   });
+module.exports = { app }; // Allows testing with Expect and Supertest
