@@ -51,7 +51,7 @@ app.get("/todo/:_id", (req, res) => {
   if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
 
   Todo.findById(_id).then(todo => {
-    if (!todo) return res.status(404).end("Not found.");
+    if (!todo) return res.status(404).send("Not found.");
     res.status(200).send(todo);
   }, err => {
     // Empty error handler, see catch below
@@ -66,7 +66,7 @@ app.delete("/todo/:_id", (req, res) => {
   if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
 
   Todo.findByIdAndRemove(_id).then(todo => {
-    if (!todo) return res.status(404).end("Not found");
+    if (!todo) return res.status(404).send("Not found");
     res.status(200).send(todo);
   }, err => {
     // Empty error handler, see catch below
@@ -132,7 +132,7 @@ app.get("/user/:_id", (req, res) => {
   if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
 
   User.findById(_id).then(user => {
-    if (!user) return res.status(404).end("User not found");
+    if (!user) return res.status(404).send("User not found");
     res.status(200).send(user);
   }, err => {
     res.status(400).send(err);
@@ -154,10 +154,10 @@ app.post("/login", (req, res) => {
   User.findByCredentials(credentials).then(user => {
     // res.status(200).send(user);
     return user.generateAuthToken().then(token => {
-      res.header("x-auth", token).send(user);
+      res.header("x-auth", token).send();
     });
   }).catch(err => {
-    res.status(err).end();
+    res.status(err).send();
   });
 
   // User.findOne({username: body.username}).then(user => {
@@ -171,8 +171,16 @@ app.post("/login", (req, res) => {
   // });
 });
 
+app.delete("/logout", authenticate, (req, res) => {
+  req.user.removeToken(req.token).then(() => {
+    res.status(200).send();
+  }, err => {
+    res.status(400).send();
+  });
+});
+
 // ----------------------------
-// Start the server
+// Start up the server
 // ----------------------------
 
 app.listen(port, () => {

@@ -76,8 +76,8 @@ describe("\n TODOS \n", () => {
         .expect(res => {
           expect(res.body._id).toBe(hexId);
           expect(res.body.text).toBe(test_todos[0].text);
-        })
-        .end(done);
+          done();
+        }).catch(err => done(err));
     });
 
     it("should return a 404 if todo not found", done => {
@@ -94,8 +94,8 @@ describe("\n TODOS \n", () => {
         .expect(400)
         .expect(res => {
           expect(res.body).toEqual({});
-        })
-        .end(done);
+          done();
+        }).catch(err => done(err));
     });
   });
 
@@ -148,8 +148,8 @@ describe("\n TODOS \n", () => {
           expect(res.body.completed).toBe(true);
           expect(res.body.text).toBe(text);
           expect(res.body.completedAt).toBeA("number");
-        })
-        .end(done);
+          done();
+        }).catch(err => done(err));
     });
 
     it("shouod clear completedAt when todo not completed", done => {
@@ -161,8 +161,8 @@ describe("\n TODOS \n", () => {
         .expect(res => {
           expect(res.body.completed).toBe(false);
           expect(res.body.completedAt).toNotExist();
-        })
-        .end(done);
+          done();
+        }).catch(err => done(err));
     });
 
     it("should return 404 if todo no found", done => {
@@ -321,7 +321,8 @@ describe("\n USERS \n", () => {
           expect(res.body._id).toBe(hexId);
           expect(res.body.username).toBe(users[0].username);
           expect(res.body.email).toBe(users[0].email);
-        }).end(done);
+          done();
+        }).catch(err => done(err));
     });
 
     it("should return a 404 if user not found", done => {
@@ -338,7 +339,8 @@ describe("\n USERS \n", () => {
         .expect(400)
         .expect(res => {
           expect(res.body).toEqual({});
-        }).end(done);
+          done();
+        }).catch(err => done(err));
     });
   });
 
@@ -360,22 +362,141 @@ describe("\n USERS \n", () => {
 
     it("should return 401 if current user not authenticated", done => {
       request(app)
-      .get("/profile")
-      .expect(401)
-      .expect(res => {
-        expect(res.body).toEqual({});
-      }).end(done);
+        .get("/profile")
+        .expect(401)
+        .expect(res => {
+          expect(res.body).toEqual({});
+          done();
+        }).catch(err => done(err));
     });
 
     it("should return 401 if invalid token", done => {
       request(app)
-      .get("/profile")
-      .set("x-auth", users[0].tokens[0].token + 1)
-      .expect(401)
-      .expect(res => {
-        expect(res.body).toEqual({});
-      }).end(done);
+        .get("/profile")
+        .set("x-auth", users[0].tokens[0].token + 1)
+        .expect(401)
+        .expect(res => {
+          expect(res.body).toEqual({});
+          done();
+        }).catch(err => done(err));
+    });
+  });
+
+  describe("POST /login", () => {
+
+    it("should login user and return auth-token if valid username", done => {
+      const login_user = {
+        username: users[1].username,
+        password: users[1].password
+      }
+      request(app)
+        .post("/login")
+        .send(login_user)
+        .expect(200)
+        .expect(res => {
+          expect(res.headers["x-auth"]).toExist();
+          expect(res.body).toEqual({});
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+          User.findById(users[1]._id).then(user => {
+            expect(user.tokens[0]).toInclude({
+              access: "auth",
+              token: res.headers["x-auth"]
+            });
+            done();
+          }).catch(err => done(err));
+        });
     });
 
+    it("should login user and return auth-token if valid email", done => {
+      const login_user = {
+        email: users[1].email,
+        password: users[1].password
+      }
+      request(app)
+        .post("/login")
+        .send(login_user)
+        .expect(200)
+        .expect(res => {
+          expect(res.headers["x-auth"]).toExist();
+          expect(res.body).toEqual({});
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+          User.findById(users[1]._id).then(user => {
+            expect(user.tokens[0]).toInclude({
+              access: "auth",
+              token: res.headers["x-auth"]
+            });
+            done();
+          }).catch(err => done(err));
+        });
+    });
+
+    it("should reject login if invalid username", done => {
+      const login_user = {
+        username: "INVALID_USERNAME",
+        password: users[0].password
+      }
+      request(app)
+        .post("/login")
+        .send(login_user)
+        .expect(404)
+        .expect(res => {
+          expect(res.headers["x-auth"]).toNotExist();
+          expect(res.body).toEqual({});
+          done();
+        }).catch(err => done(err));
+    });
+
+    it("should reject login if invalid email", done => {
+      const login_user = {
+        email: "INVALID_EMAIL",
+        password: users[0].password
+      }
+      request(app)
+        .post("/login")
+        .send(login_user)
+        .expect(404)
+        .expect(res => {
+          expect(res.headers["x-auth"]).toNotExist();
+          expect(res.body).toEqual({});
+          done();
+        }).catch(err => done(err));
+    });
+
+    it("should return 400 if invalid password", done => {
+      const login_user = {
+        username: users[1].username,
+        password: "INVALID_PASSWORD"
+      }
+      request(app)
+        .post("/login")
+        .send(login_user)
+        .expect(400)
+        .expect(res => {
+          expect(res.headers["x-auth"]).toNotExist();
+          expect(res.body).toEqual({});
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+          User.findById(users[1]._id).then(user => {
+            expect(user.tokens.length).toBe(0);
+            done();
+          }).catch(err => done(err));
+        });
+    });
+
+    it("should return 400 if no credentials", done => {
+      request(app)
+        .post("/login")
+        .expect(400)
+        .expect(res => {
+          expect(res.headers["x-auth"]).toNotExist();
+          expect(res.body).toEqual({});
+          done();
+        }).catch(err => done(err));
+    });
   });
 });
