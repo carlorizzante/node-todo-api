@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const {ObjectID} = require("mongodb");
 const _ = require("lodash");
+const bcrypt = require("bcryptjs");
 
 require("./server.config");
 const { mongoose } = require("./db/mongoose");
@@ -140,6 +141,34 @@ app.get("/user/:_id", (req, res) => {
 
 app.get("/profile", authenticate, (req, res) => {
   res.status(200).send(req.user);
+});
+
+app.post("/login", (req, res) => {
+  const body = _.pick(req.body, ["username", "password", "email"]);
+  const credentials = {
+    username: body.username,
+    password: body.password,
+    email: body.email
+  }
+
+  User.findByCredentials(credentials).then(user => {
+    // res.status(200).send(user);
+    return user.generateAuthToken().then(token => {
+      res.header("x-auth", token).send(user);
+    });
+  }).catch(err => {
+    res.status(err).end();
+  });
+
+  // User.findOne({username: body.username}).then(user => {
+  //   if (!user) return res.status(404).end("User not found");
+  //   bcrypt.compare(body.password, user.password, (err, status) => {
+  //     if (!status) return res.status(401).end();
+  //     res.status(200).send(user);
+  //   });
+  // }, err => {
+  //   res.status(400).send(err);
+  // });
 });
 
 // ----------------------------
