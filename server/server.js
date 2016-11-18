@@ -118,7 +118,11 @@ app.get("/users", (req, res) => {
       // console.log(JSON.stringify(users, null, 2));
       res.status(200).send({users});
     }, err => {
-      res.status(400).send(err);
+      if (e.code === 11000) { // 11000 is the error code for duplicated key
+        res.status(400).send({message: 'An account already exists with that email.'});
+      } else {
+        res.status(400).send(e);
+      }
     });
 });
 
