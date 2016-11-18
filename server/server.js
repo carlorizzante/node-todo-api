@@ -5,6 +5,7 @@ const _ = require("lodash");
 const bcrypt = require("bcryptjs");
 
 require("./server.config");
+
 const { mongoose } = require("./db/mongoose");
 const { User } = require("./models/user");
 const { Todo } = require("./models/todo");
@@ -184,7 +185,7 @@ app.delete("/logout", authenticate, (req, res) => {
 // ----------------------------
 
 app.listen(port, () => {
-  console.log(`Server listenig on port ${port}...`);
+  console.log(`Server listenig on port ${port}...\n`);
 });
 
 module.exports = { app }; // Allows testing with Expect and Supertest

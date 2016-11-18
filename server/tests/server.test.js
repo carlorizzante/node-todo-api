@@ -9,7 +9,7 @@ const { test_todos, populate_test_todos } = require("./seed_test_todos");
 const { users, populateUsers } = require("./seed_test_users");
 
 // -------------------------------
-describe("\n TODOS \n", () => {
+describe("TODOS............ \n", () => {
 // -------------------------------
 
   beforeEach(populate_test_todos);
@@ -184,7 +184,7 @@ describe("\n TODOS \n", () => {
 
 
 // -------------------------------
-describe("\n USERS \n", () => {
+describe("USERS............ \n", () => {
 // -------------------------------
 
   beforeEach(populateUsers);
@@ -498,5 +498,27 @@ describe("\n USERS \n", () => {
           done();
         }).catch(err => done(err));
     });
+  });
+
+  describe("DELETE /logout", () => {
+
+    it("should remove auth token on logout", done => {
+      request(app)
+        .delete("/logout")
+        .set("x-auth", users[0].tokens[0].token)
+        .expect(200)
+        .expect(res => {
+          expect(res.headers["x-auth"]).toNotExist();
+        })
+        .end((err, res) => {
+          if (err) done(err);
+          User.findById(users[0]._id).then(user => {
+            expect(user.tokens[0]).toNotExist();
+            expect(user.tokens.length).toBe(0);
+            done();
+          }).catch(err => done(err));
+        });
+      });
+
   });
 });
