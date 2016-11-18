@@ -26,7 +26,6 @@ app.post("/todo", authenticate, (req, res) => {
     text: req.body.text,
     _creator: req.user._id
   });
-
   todo.save().then( todo => {
     res.status(200).send(todo);
   }, err => {
@@ -46,11 +45,13 @@ app.get("/todos", authenticate, (req, res) => {
 });
 
 // Returns a specific todo by _id
-app.get("/todo/:_id", (req, res) => {
+app.get("/todo/:_id", authenticate, (req, res) => {
   const _id = req.params._id;
   if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
-
-  Todo.findById(_id).then(todo => {
+  Todo.findOne({
+    _id,
+    _creator: req.user._id
+  }).then(todo => {
     if (!todo) return res.status(404).send("Not found.");
     res.status(200).send(todo);
   }, err => {
@@ -61,11 +62,13 @@ app.get("/todo/:_id", (req, res) => {
 });
 
 // Deletes a specific todo by _id
-app.delete("/todo/:_id", (req, res) => {
+app.delete("/todo/:_id", authenticate, (req, res) => {
   const _id = req.params._id;
   if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
-
-  Todo.findByIdAndRemove(_id).then(todo => {
+  Todo.findOneAndRemove({
+    _id,
+    _creator: req.user._id
+  }).then(todo => {
     if (!todo) return res.status(404).send("Not found");
     res.status(200).send(todo);
   }, err => {
@@ -76,20 +79,20 @@ app.delete("/todo/:_id", (req, res) => {
 });
 
 // Updates a specific todo by _id
-app.patch("/todo/:_id", (req, res) => {
+app.patch("/todo/:_id", authenticate, (req, res) => {
   const _id = req.params._id;
   const body = _.pick(req.body, ["text", "completed"]);
-
   if (!ObjectID.isValid(_id)) return res.status(400).send("bad request > Invalid ID");
-
   if (_.isBoolean(body.completed) && body.completed) {
     body.completedAt = new Date().getTime();
   } else {
     body.completed = false;
     body.completedAt = null;
   }
-
-  Todo.findByIdAndUpdate(_id, {$set: body}, {new: true, runValidators: true}).then(todo => {
+  Todo.findOneAndUpdate({
+    _id,
+    _creator: req.user._id
+  }, {$set: body}, {new: true, runValidators: true}).then(todo => {
     if (!todo) return res.status(404).send();
     res.status(200).send(todo);
   }).catch(e => {
@@ -105,7 +108,6 @@ app.patch("/todo/:_id", (req, res) => {
 app.post("/user", (req, res) => {
   const body = _.pick(req.body, ["username", "email", "password"]);
   const user = new User(body);
-
   user.save().then(() => {
     return user.generateAuthToken();
   }).then(token => {
@@ -131,7 +133,6 @@ app.get("/users", (req, res) => {
 app.get("/user/:_id", (req, res) => {
   const _id = req.params._id;
   if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
-
   User.findById(_id).then(user => {
     if (!user) return res.status(404).send("User not found");
     res.status(200).send(user);

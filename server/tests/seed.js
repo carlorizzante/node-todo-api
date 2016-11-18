@@ -4,26 +4,30 @@ const jwt = require("jsonwebtoken");
 const { Todo } = require("../models/todo");
 const { User } = require("../models/user");
 
-const _id = new ObjectID();
+const _id_one = new ObjectID();
+const _id_two = new ObjectID();
 const access = "auth";
-const token = jwt.sign({_id, access}, "secret_key").toString();
 
 const test_users = [{
   // Valid user with tokens
-  _id,
+  _id: _id_one,
   username: "test_user_1",
   password: "123abc!",
   email: "test_user_1@example.com",
   tokens: [{
     access,
-    token
+    token: jwt.sign({_id: _id_one, access}, "secret_key").toString()
   }]
 }, {
   // Invalid user without tokens
-  _id: new ObjectID(),
+  _id: _id_two,
   username: "test_user_2",
   password: "456def?",
-  email: "test_user_2@example.com"
+  email: "test_user_2@example.com",
+  tokens: [{
+    access,
+    token: jwt.sign({_id: _id_two, access}, "secret_key").toString()
+  }]
 }];
 
 const test_todos = [{
