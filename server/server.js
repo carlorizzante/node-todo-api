@@ -20,33 +20,32 @@ app.use(bodyParser.json());
 // Todos
 // ----------------------------
 
-app.post("/todo", (req, res) => {
-  // console.log(req.body);
+// Creates a new todo
+app.post("/todo", authenticate, (req, res) => {
   const todo = new Todo({
-    text: req.body.text
+    text: req.body.text,
+    _creator: req.user._id
   });
 
   todo.save().then( todo => {
-    // console.log("Document saved");
-    // console.log(JSON.stringify(todo, null, 2));
     res.status(200).send(todo);
   }, err => {
-    // console.log("Unable to save document:");
     res.status(400).send(err);
   });
 });
 
-app.get("/todos", (req, res) => {
-  const todos = Todo.find()
-    .then( todos => {
-      // console.log(counter++);
-      // console.log(JSON.stringify(todos, null, 2));
+// Returns all todos
+app.get("/todos", authenticate, (req, res) => {
+  Todo.find({
+    _creator: req.user._id
+  }).then( todos => {
       res.status(200).send({todos});
     }, err => {
       res.status(400).send(err);
     });
 });
 
+// Returns a specific todo by _id
 app.get("/todo/:_id", (req, res) => {
   const _id = req.params._id;
   if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
@@ -57,11 +56,11 @@ app.get("/todo/:_id", (req, res) => {
   }, err => {
     // Empty error handler, see catch below
   }).catch(e => {
-    // console.log(e);
     res.status(400).send("Some error occurred.");
   });
 });
 
+// Deletes a specific todo by _id
 app.delete("/todo/:_id", (req, res) => {
   const _id = req.params._id;
   if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
@@ -76,6 +75,7 @@ app.delete("/todo/:_id", (req, res) => {
   });
 });
 
+// Updates a specific todo by _id
 app.patch("/todo/:_id", (req, res) => {
   const _id = req.params._id;
   const body = _.pick(req.body, ["text", "completed"]);
@@ -101,23 +101,22 @@ app.patch("/todo/:_id", (req, res) => {
 // Users
 // ----------------------------
 
+// Creates a new user
 app.post("/user", (req, res) => {
   const body = _.pick(req.body, ["username", "email", "password"]);
   const user = new User(body);
 
   user.save().then(() => {
-    // console.log("Document saved");
-    // console.log(JSON.stringify(user, null, 2));
     return user.generateAuthToken();
   }).then(token => {
     res.header("x-auth", token).status(200).send(user);
   }).catch(err => res.status(400).send(err));
 });
 
+// Returns all users
 app.get("/users", (req, res) => {
   const users = User.find()
     .then( users => {
-      // console.log(JSON.stringify(users, null, 2));
       res.status(200).send({users});
     }, err => {
       if (e.code === 11000) { // 11000 is the error code for duplicated key
@@ -128,6 +127,7 @@ app.get("/users", (req, res) => {
     });
 });
 
+// Returns a specific user by _id
 app.get("/user/:_id", (req, res) => {
   const _id = req.params._id;
   if (!ObjectID.isValid(_id)) return res.status(400).send("Bad request > Invalid ID");
@@ -140,10 +140,12 @@ app.get("/user/:_id", (req, res) => {
   });
 });
 
+// Returns profile for current user
 app.get("/profile", authenticate, (req, res) => {
   res.status(200).send(req.user);
 });
 
+// Login for current user
 app.post("/login", (req, res) => {
   const body = _.pick(req.body, ["username", "password", "email"]);
   const credentials = {
@@ -153,25 +155,15 @@ app.post("/login", (req, res) => {
   }
 
   User.findByCredentials(credentials).then(user => {
-    // res.status(200).send(user);
     return user.generateAuthToken().then(token => {
       res.header("x-auth", token).send();
     });
   }).catch(err => {
     res.status(err).send();
   });
-
-  // User.findOne({username: body.username}).then(user => {
-  //   if (!user) return res.status(404).end("User not found");
-  //   bcrypt.compare(body.password, user.password, (err, status) => {
-  //     if (!status) return res.status(401).end();
-  //     res.status(200).send(user);
-  //   });
-  // }, err => {
-  //   res.status(400).send(err);
-  // });
 });
 
+// Logout for current user
 app.delete("/logout", authenticate, (req, res) => {
   req.user.removeToken(req.token).then(() => {
     res.status(200).send();

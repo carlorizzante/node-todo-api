@@ -5,14 +5,16 @@ const { ObjectID } = require("mongodb");
 const { app } = require("../server");
 const { Todo } = require("../models/todo");
 const { User } = require("../models/user");
-const { test_todos, populate_test_todos } = require("./seed_test_todos");
-const { users, populateUsers } = require("./seed_test_users");
+const { test_users, test_todos, populateUsers, populateTodos } = require("./seed");
 
 // -------------------------------
 describe("TODOS............ \n", () => {
 // -------------------------------
 
-  beforeEach(populate_test_todos);
+  // Creates set of todos and users at the same time
+  // because we need the correct _ids and tokens
+  beforeEach(populateTodos);
+  beforeEach(populateUsers);
 
   describe("POST /todo", () => {
 
@@ -20,6 +22,7 @@ describe("TODOS............ \n", () => {
       const text = "Server.test.js";
       request(app)
         .post("/todo")
+        .set("x-auth", test_users[0].tokens[0].token)
         .send({text})
         .expect(200)
         .expect(res => {
@@ -40,6 +43,7 @@ describe("TODOS............ \n", () => {
       const text = "";
       request(app)
         .post("/todo")
+        .set("x-auth", test_users[0].tokens[0].token)
         .send({text})
         .expect(400) // Bad Request
         .end(err => {
@@ -54,12 +58,13 @@ describe("TODOS............ \n", () => {
 
   describe("GET /todos", () => {
 
-    it("should return all todos in the db", done => {
+    it("should return only user todos in the db", done => {
       request(app)
         .get("/todos")
+        .set("x-auth", test_users[0].tokens[0].token)
         .expect(200)
         .expect(res => {
-          expect(res.body.todos.length).toBe(2);
+          expect(res.body.todos.length).toBe(1);
           done();
         }).catch(err => done(err));
     });
@@ -187,6 +192,7 @@ describe("TODOS............ \n", () => {
 describe("USERS............ \n", () => {
 // -------------------------------
 
+  // To test users we need to create only dummy users, no todos
   beforeEach(populateUsers);
 
   describe("POST /user", () => {
@@ -260,7 +266,7 @@ describe("USERS............ \n", () => {
 
     it("should not create an user with duplicated username", done => {
       const new_user = {
-        username: users[0].username,
+        username: test_users[0].username,
         password: "135",
         email: "NEW_EMAIL@example.com"
       }
@@ -281,7 +287,7 @@ describe("USERS............ \n", () => {
       const new_user = {
         username: "UNUSED_USERNAME",
         password: "246",
-        email: users[0].email
+        email: test_users[0].email
       }
       request(app)
         .post("/user")
@@ -313,14 +319,14 @@ describe("USERS............ \n", () => {
   describe("Get /user/:_id", () => {
 
     it("should get an user by ID", done => {
-      const hexId = users[0]._id.toHexString();
+      const hexId = test_users[0]._id.toHexString();
       request(app)
         .get(`/user/${hexId}`)
         .expect(200)
         .expect(res => {
           expect(res.body._id).toBe(hexId);
-          expect(res.body.username).toBe(users[0].username);
-          expect(res.body.email).toBe(users[0].email);
+          expect(res.body.username).toBe(test_users[0].username);
+          expect(res.body.email).toBe(test_users[0].email);
           done();
         }).catch(err => done(err));
     });
@@ -349,12 +355,12 @@ describe("USERS............ \n", () => {
     it("should return current user if authenticated", done => {
       request(app)
         .get("/profile")
-        .set("x-auth", users[0].tokens[0].token)
+        .set("x-auth", test_users[0].tokens[0].token)
         .expect(200)
         .expect(res => {
-          expect(res.body._id).toBe(users[0]._id.toHexString());
-          expect(res.body.username).toBe(users[0].username);
-          expect(res.body.email).toBe(users[0].email);
+          expect(res.body._id).toBe(test_users[0]._id.toHexString());
+          expect(res.body.username).toBe(test_users[0].username);
+          expect(res.body.email).toBe(test_users[0].email);
           expect(res.body.password).toNotExist();
           done();
         }).catch(err => done(err));
@@ -373,7 +379,7 @@ describe("USERS............ \n", () => {
     it("should return 401 if invalid token", done => {
       request(app)
         .get("/profile")
-        .set("x-auth", users[0].tokens[0].token + 1)
+        .set("x-auth", test_users[0].tokens[0].token + 1)
         .expect(401)
         .expect(res => {
           expect(res.body).toEqual({});
@@ -386,8 +392,8 @@ describe("USERS............ \n", () => {
 
     it("should login user and return auth-token if valid username", done => {
       const login_user = {
-        username: users[1].username,
-        password: users[1].password
+        username: test_users[1].username,
+        password: test_users[1].password
       }
       request(app)
         .post("/login")
@@ -399,7 +405,7 @@ describe("USERS............ \n", () => {
         })
         .end((err, res) => {
           if (err) return done(err);
-          User.findById(users[1]._id).then(user => {
+          User.findById(test_users[1]._id).then(user => {
             expect(user.tokens[0]).toInclude({
               access: "auth",
               token: res.headers["x-auth"]
@@ -411,8 +417,8 @@ describe("USERS............ \n", () => {
 
     it("should login user and return auth-token if valid email", done => {
       const login_user = {
-        email: users[1].email,
-        password: users[1].password
+        email: test_users[1].email,
+        password: test_users[1].password
       }
       request(app)
         .post("/login")
@@ -424,7 +430,7 @@ describe("USERS............ \n", () => {
         })
         .end((err, res) => {
           if (err) return done(err);
-          User.findById(users[1]._id).then(user => {
+          User.findById(test_users[1]._id).then(user => {
             expect(user.tokens[0]).toInclude({
               access: "auth",
               token: res.headers["x-auth"]
@@ -437,7 +443,7 @@ describe("USERS............ \n", () => {
     it("should reject login if invalid username", done => {
       const login_user = {
         username: "INVALID_USERNAME",
-        password: users[0].password
+        password: test_users[0].password
       }
       request(app)
         .post("/login")
@@ -453,7 +459,7 @@ describe("USERS............ \n", () => {
     it("should reject login if invalid email", done => {
       const login_user = {
         email: "INVALID_EMAIL",
-        password: users[0].password
+        password: test_users[0].password
       }
       request(app)
         .post("/login")
@@ -468,7 +474,7 @@ describe("USERS............ \n", () => {
 
     it("should return 400 if invalid password", done => {
       const login_user = {
-        username: users[1].username,
+        username: test_users[1].username,
         password: "INVALID_PASSWORD"
       }
       request(app)
@@ -481,7 +487,7 @@ describe("USERS............ \n", () => {
         })
         .end((err, res) => {
           if (err) return done(err);
-          User.findById(users[1]._id).then(user => {
+          User.findById(test_users[1]._id).then(user => {
             expect(user.tokens.length).toBe(0);
             done();
           }).catch(err => done(err));
@@ -505,14 +511,14 @@ describe("USERS............ \n", () => {
     it("should remove auth token on logout", done => {
       request(app)
         .delete("/logout")
-        .set("x-auth", users[0].tokens[0].token)
+        .set("x-auth", test_users[0].tokens[0].token)
         .expect(200)
         .expect(res => {
           expect(res.headers["x-auth"]).toNotExist();
         })
         .end((err, res) => {
           if (err) done(err);
-          User.findById(users[0]._id).then(user => {
+          User.findById(test_users[0]._id).then(user => {
             expect(user.tokens[0]).toNotExist();
             expect(user.tokens.length).toBe(0);
             done();
