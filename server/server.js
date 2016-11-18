@@ -4,7 +4,7 @@ const {ObjectID} = require("mongodb");
 const _ = require("lodash");
 const bcrypt = require("bcryptjs");
 
-require("./server.config");
+require("./config");
 
 const { mongoose } = require("./db/mongoose");
 const { User } = require("./models/user");

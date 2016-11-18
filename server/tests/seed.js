@@ -7,6 +7,7 @@ const { User } = require("../models/user");
 const _id_one = new ObjectID();
 const _id_two = new ObjectID();
 const access = "auth";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const test_users = [{
   // Valid user with tokens
@@ -16,7 +17,7 @@ const test_users = [{
   email: "test_user_1@example.com",
   tokens: [{
     access,
-    token: jwt.sign({_id: _id_one, access}, "secret_key").toString()
+    token: jwt.sign({_id: _id_one, access}, JWT_SECRET).toString()
   }]
 }, {
   // Invalid user without tokens
@@ -26,7 +27,7 @@ const test_users = [{
   email: "test_user_2@example.com",
   tokens: [{
     access,
-    token: jwt.sign({_id: _id_two, access}, "secret_key").toString()
+    token: jwt.sign({_id: _id_two, access}, JWT_SECRET).toString()
   }]
 }];
 
