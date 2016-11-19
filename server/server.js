@@ -108,6 +108,15 @@ app.patch("/todo/:_id", authenticate, (req, res) => {
 app.post("/user", (req, res) => {
   const body = _.pick(req.body, ["username", "email", "password"]);
   const user = new User(body);
+  // const verify_username = new User.findOne({
+  //   username: body.username
+  // });
+  // const verify_email = new User.findOne({
+  //   username: body.email
+  // });
+  // return Promise.race([verify_username, verify_email]).then((resolve, reject) => {
+  //   return reject("Username or password already taken.");
+  // });
   user.save().then(() => {
     return user.generateAuthToken();
   }).then(token => {

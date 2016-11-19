@@ -311,9 +311,6 @@ describe("USERS............ \n", () => {
         .expect(200)
         .expect(res => {
           expect(res.headers["x-auth"]).toExist();
-          // console.log("header", res.header);
-          // console.log("headers", res.headers);
-          // expect(res.header).toNotEqual(res.headers);
           expect(res.body.username).toBe(new_user.username);
           expect(res.body.email).toBe(new_user.email);
           expect(res.body.password).toNotExist(); // Password needs to not be passed back
@@ -378,8 +375,8 @@ describe("USERS............ \n", () => {
         .expect(400)
         .end((err, res) => {
           if (err) return done(err);
-          User.find({email: new_user.email}).then(users => {
-            expect(users.length).toBe(0);
+          User.find({}).then(users => {
+            expect(users.length).toBe(2);
             done();
           }).catch(err => done(err));
         });
@@ -387,7 +384,7 @@ describe("USERS............ \n", () => {
 
     it("should not create a new user with duplicated email", done => {
       const new_user = {
-        username: "UNUSED_USERNAME",
+        username: "NEW_USERNAME",
         password: "246",
         email: test_users[0].email
       }
@@ -397,8 +394,8 @@ describe("USERS............ \n", () => {
         .expect(400)
         .end((err, res) => {
           if (err) return done(err);
-          User.find({username: new_user.username}).then(users => {
-            expect(users.length).toBe(0);
+          User.find({}).then(users => {
+            expect(users.length).toBe(2);
             done();
           }).catch(err => done(err));
         });

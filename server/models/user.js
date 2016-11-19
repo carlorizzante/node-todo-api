@@ -12,6 +12,7 @@ const UserSchema = new mongoose.Schema({
     required: [true, "Username required"],
     trim: true,
     minlength: 3,
+    index: true,
     unique: true
   },
   email: {
@@ -19,6 +20,7 @@ const UserSchema = new mongoose.Schema({
     required: [true, "Email required"],
     trim: true,
     minlength: 8,
+    index: true,
     unique: true,
     validate: {
       // validator: value => validator.isEmail(value),
